@@ -18,8 +18,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -41,6 +43,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Marker> destinationMarkers = new ArrayList<>();
     private List<Polyline> polylinePaths = new ArrayList<>();
     private ProgressDialog progressDialog;
+    private static final LatLng BRISBANE = new LatLng(-27.47093, 153.0235);
+
+    private static final LatLng MELBOURNE = new LatLng(-37.81319, 144.96298);
+
+    private static final LatLng SYDNEY = new LatLng(-33.87365, 151.20689);
+
+    private static final LatLng ADELAIDE = new LatLng(-34.92873, 138.59995);
+
+    private static final LatLng PERTH = new LatLng(-31.952854, 115.857342);
+
+    private static final LatLng DARWIN = new LatLng(-12.459501, 130.839915);
+
+    /**
+     * A Polygon with five points in the Norther Territory, Australia.
+     */
+    private static final LatLng[] POLYGON = new LatLng[]{
+            new LatLng(-18.000328, 130.473633), new LatLng(-16.173880, 135.087891),
+            new LatLng(-19.663970, 137.724609), new LatLng(-23.202307, 135.395508),
+            new LatLng(-19.705347, 129.550781)};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +83,103 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
+    public void showDarwin(View v) {
+        // Wait until map is ready
+        if (mMap == null) {
+            return;
+        }
 
+        // Center camera on Adelaide marker
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DARWIN, 10f));
+    }
+
+    /**
+     * Move the camera to center on Adelaide.
+     */
+    public void showAdelaide(View v) {
+        // Wait until map is ready
+        if (mMap == null) {
+            return;
+        }
+
+        // Center camera on Adelaide marker
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ADELAIDE, 10f));
+    }
+
+    /**
+     * Move the camera to show all of Australia.
+     * Construct a {@link com.google.android.gms.maps.model.LatLngBounds} from markers positions,
+     * then move the camera.
+     */
+    public void showAustralia(View v) {
+        // Wait until map is ready
+        if (mMap == null) {
+            return;
+        }
+
+        // Create bounds that include all locations of the map
+        LatLngBounds.Builder boundsBuilder = LatLngBounds.builder()
+                .include(PERTH)
+                .include(ADELAIDE)
+                .include(MELBOURNE)
+                .include(SYDNEY)
+                .include(DARWIN)
+                .include(BRISBANE);
+
+        // Move camera to show all markers and locations
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 20));
+    }
+
+    /**
+     * Called when the map is ready to add all markers and objects to the map.
+     */
+
+    /**
+     * Add a Polyline and a Polygon to the map.
+     * The Polyline connects Melbourne, Adelaide and Perth. The Polygon is located in the Northern
+     * Territory (Australia).
+     */
+    private void addPolyObjects() {
+        mMap.addPolyline((new PolylineOptions())
+                .add(MELBOURNE, ADELAIDE, PERTH)
+                .color(Color.GREEN)
+                .width(5f));
+
+        mMap.addPolygon(new PolygonOptions()
+                .add(POLYGON)
+                .fillColor(Color.CYAN)
+                .strokeColor(Color.BLUE)
+                .strokeWidth(5));
+    }
+
+    /**
+     * Add Markers with default info windows to the map.
+     */
+    private void addMarkers() {
+        mMap.addMarker(new MarkerOptions()
+                .position(BRISBANE)
+                .title("Brisbane"));
+
+        mMap.addMarker(new MarkerOptions()
+                .position(MELBOURNE)
+                .title("Melbourne")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+
+        mMap.addMarker(new MarkerOptions()
+                .position(SYDNEY)
+                .title("Sydney")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+
+        mMap.addMarker(new MarkerOptions()
+                .position(ADELAIDE)
+                .title("Adelaide")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));
+
+        mMap.addMarker(new MarkerOptions()
+                .position(PERTH)
+                .title("Perth")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+    }
     private void sendRequest() {
         String origin = etOrigin.getText().toString();
         String destination = etDestination.getText().toString();
@@ -89,7 +206,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         originMarkers.add(mMap.addMarker(new MarkerOptions()
                 .title("Đại học Bách Khoa hà Nội")
                 .position(bk)));
-
+        addMarkers();
+        addPolyObjects();
+        showAustralia(null);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
